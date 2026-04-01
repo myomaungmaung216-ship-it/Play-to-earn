@@ -1,247 +1,525 @@
+```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Snowfall App - Winter Wonderland</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Snow Candy - နှင်းနဲ့သကြားလုံးများ</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
 
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            position: relative;
-        }
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: system-ui, 'Segoe UI', -apple-system, 'Helvetica Neue', sans-serif;
+      background: #0a1f3e;
+    }
 
-        .container {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            padding: 2rem;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 1.5s ease-in;
-        }
+    /* Main App Container - Beautiful gradient background */
+    .app-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 30% 40%, #1a4c7a, #041c2f, #020d1a);
+      overflow: hidden;
+    }
 
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            letter-spacing: 2px;
-        }
-
-        p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-
-        button {
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-            border: 2px solid white;
-            color: white;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        button:hover {
-            background: rgba(255, 255, 255, 0.5);
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        #snowCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 20;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-            
-            p {
-                font-size: 1rem;
-            }
-            
-            button {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-        }
-    </style>
+    /* Snow Canvas */
+    #snow-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    
+    /* Candy Canvas - separate layer for candies */
+    #candy-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+    
+    /* Decorative floating elements (glitter) */
+    .glitter-sparkle {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    /* Invisible controls - no text on screen */
+    .hidden-controls {
+      position: absolute;
+      bottom: 30px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .invisible-btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 70px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .touch-area {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      height: 100px;
+      z-index: 25;
+      opacity: 0;
+      pointer-events: auto;
+    }
+    
+    /* Beautiful animated gradient overlay for depth */
+    .ambient-glow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,200,150,0.08) 0%, rgba(100,150,200,0.05) 100%);
+      pointer-events: none;
+      z-index: 1;
+      animation: slowBreath 8s ease-in-out infinite;
+    }
+    
+    @keyframes slowBreath {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>❄️ Winter Wonderland ❄️</h1>
-        <p>Welcome to your peaceful snowy escape</p>
-        <button id="toggleSnowBtn">Pause Snow</button>
-    </div>
+
+<div class="app-container">
+  <div class="ambient-glow"></div>
+  <canvas id="snow-canvas"></canvas>
+  <canvas id="candy-canvas"></canvas>
+  
+  <!-- Invisible buttons - screen မှာ စာလုံးဘာမှ မပါဘူး -->
+  <div class="hidden-controls">
+    <button class="invisible-btn" id="moreSnowBtn" aria-label="Add snow"></button>
+    <button class="invisible-btn" id="candyBurstBtn" aria-label="Candy burst"></button>
+  </div>
+  <div class="touch-area" id="doubleTapArea"></div>
+</div>
+
+<script>
+  (function() {
+    // ==================== SNOW SYSTEM (Reduced amount) ====================
+    const snowCanvas = document.getElementById('snow-canvas');
+    const snowCtx = snowCanvas.getContext('2d');
     
-    <canvas id="snowCanvas"></canvas>
-
-    <script>
-        class Snowfall {
-            constructor(canvas) {
-                this.canvas = canvas;
-                this.ctx = canvas.getContext('2d');
-                this.snowflakes = [];
-                this.isSnowing = true;
-                this.animationId = null;
-                
-                this.init();
-                this.setupEventListeners();
-                this.animate();
-                this.handleResize();
-            }
-            
-            init() {
-                this.numberOfSnowflakes = 150;
-                this.snowflakes = [];
-                
-                for (let i = 0; i < this.numberOfSnowflakes; i++) {
-                    this.snowflakes.push(this.createSnowflake());
-                }
-            }
-            
-            createSnowflake() {
-                return {
-                    x: Math.random() * this.canvas.width,
-                    y: Math.random() * this.canvas.height,
-                    radius: Math.random() * 4 + 1,
-                    speedY: Math.random() * 1.5 + 0.5,
-                    speedX: Math.random() * 0.5 - 0.25,
-                    opacity: Math.random() * 0.5 + 0.3,
-                    swing: Math.random() * Math.PI * 2,
-                    swingSpeed: Math.random() * 0.02 + 0.005
-                };
-            }
-            
-            drawSnowflake(snowflake) {
-                this.ctx.beginPath();
-                this.ctx.arc(snowflake.x, snowflake.y, snowflake.radius, 0, Math.PI * 2);
-                this.ctx.fillStyle = `rgba(255, 255, 255, ${snowflake.opacity})`;
-                this.ctx.fill();
-                
-                if (snowflake.radius > 2.5) {
-                    this.ctx.beginPath();
-                    this.ctx.arc(snowflake.x, snowflake.y, snowflake.radius * 0.8, 0, Math.PI * 2);
-                    this.ctx.fillStyle = `rgba(255, 255, 255, ${snowflake.opacity * 0.5})`;
-                    this.ctx.fill();
-                }
-            }
-            
-            updateSnowflake(snowflake) {
-                snowflake.swing += snowflake.swingSpeed;
-                snowflake.x += snowflake.speedX + Math.sin(snowflake.swing) * 0.2;
-                snowflake.y += snowflake.speedY;
-                
-                if (snowflake.y > this.canvas.height) {
-                    snowflake.y = -snowflake.radius;
-                    snowflake.x = Math.random() * this.canvas.width;
-                    snowflake.speedY = Math.random() * 1.5 + 0.5;
-                }
-                
-                if (snowflake.x > this.canvas.width + snowflake.radius) {
-                    snowflake.x = -snowflake.radius;
-                } else if (snowflake.x < -snowflake.radius) {
-                    snowflake.x = this.canvas.width + snowflake.radius;
-                }
-            }
-            
-            draw() {
-                if (!this.isSnowing) return;
-                
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                
-                for (let snowflake of this.snowflakes) {
-                    this.updateSnowflake(snowflake);
-                    this.drawSnowflake(snowflake);
-                }
-            }
-            
-            animate() {
-                this.draw();
-                this.animationId = requestAnimationFrame(() => this.animate());
-            }
-            
-            toggleSnow() {
-                this.isSnowing = !this.isSnowing;
-                if (this.isSnowing) {
-                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                } else {
-                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                }
-                return this.isSnowing;
-            }
-            
-            handleResize() {
-                const resizeCanvas = () => {
-                    this.canvas.width = window.innerWidth;
-                    this.canvas.height = window.innerHeight;
-                    this.init();
-                };
-                
-                window.addEventListener('resize', () => {
-                    resizeCanvas();
-                });
-                
-                resizeCanvas();
-            }
-            
-            setupEventListeners() {
-                const toggleBtn = document.getElementById('toggleSnowBtn');
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', () => {
-                        const isSnowing = this.toggleSnow();
-                        toggleBtn.textContent = isSnowing ? 'Pause Snow' : 'Start Snow';
-                    });
-                }
-            }
-            
-            cleanup() {
-                if (this.animationId) {
-                    cancelAnimationFrame(this.animationId);
-                }
-            }
+    // ==================== CANDY SYSTEM ====================
+    const candyCanvas = document.getElementById('candy-canvas');
+    const candyCtx = candyCanvas.getContext('2d');
+    
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    
+    // Snowflakes - နှင်းတွေကို နဲနဲလျှော့ပေးထား (reduced)
+    let snowflakes = [];
+    let snowCount = 65;  // reduced from 150 to 65
+    
+    // Candies array
+    let candies = [];
+    let candyCount = 28;  // beautiful candies floating
+    
+    let wind = 0.12;
+    
+    const MIN_SNOW_RADIUS = 2;
+    const MAX_SNOW_RADIUS = 5;
+    
+    // Candy types with beautiful colors and shapes
+    const candyColors = [
+      '#FF6B6B', '#FF8C42', '#F9C74F', '#90BE6D', '#43AA8B', 
+      '#4D908E', '#577590', '#9B5DE5', '#F15BB5', '#FEE440',
+      '#FF99C8', '#A9DEF9', '#D0F4DE', '#FFD166', '#EF476F'
+    ];
+    
+    class Candy {
+      constructor(x, y, type = null) {
+        this.x = x !== undefined ? x : Math.random() * width;
+        this.y = y !== undefined ? y : Math.random() * height;
+        this.type = type !== null ? type : Math.floor(Math.random() * 4); // 0-3 different candy shapes
+        this.size = Math.random() * 12 + 8; // 8-20px
+        this.color = candyColors[Math.floor(Math.random() * candyColors.length)];
+        this.speedY = Math.random() * 0.6 + 0.2;  // slower than snow, gentle floating
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+        this.opacity = Math.random() * 0.6 + 0.5;
+        this.sparkle = Math.random() * Math.PI * 2;
+      }
+      
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX + wind * 0.03;
+        this.rotation += this.rotationSpeed;
+        
+        // wrap around
+        if (this.y > height + 50) {
+          this.y = -50;
+          this.x = Math.random() * width;
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const canvas = document.getElementById('snowCanvas');
-            const snowfall = new Snowfall(canvas);
-            console.log('❄️ Welcome to the Snowfall App! ❄️');
-        });
-    </script>
+        if (this.x > width + 60) this.x = -60;
+        if (this.x < -60) this.x = width + 60;
+      }
+      
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.globalAlpha = this.opacity;
+        
+        // Draw different candy shapes
+        if (this.type === 0) {
+          // Round candy with highlight (lollipop style)
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = 'rgba(255,200,100,0.5)';
+          // highlight
+          ctx.beginPath();
+          ctx.arc(-this.size/6, -this.size/6, this.size/6, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.fill();
+          // candy stripe
+          ctx.beginPath();
+          ctx.ellipse(0, 0, this.size/2.5, this.size/6, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.4)';
+          ctx.fill();
+        } 
+        else if (this.type === 1) {
+          // Heart shaped candy
+          ctx.beginPath();
+          const s = this.size / 2;
+          ctx.moveTo(0, s * 0.6);
+          ctx.bezierCurveTo(-s, -s * 0.4, -s * 0.5, -s * 0.8, 0, -s * 0.3);
+          ctx.bezierCurveTo(s * 0.5, -s * 0.8, s, -s * 0.4, 0, s * 0.6);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+          ctx.shadowBlur = 6;
+          ctx.shadowColor = 'rgba(255,180,100,0.4)';
+        }
+        else if (this.type === 2) {
+          // Star candy
+          const spikes = 5;
+          const outerR = this.size / 2;
+          const innerR = this.size / 4;
+          let rot = Math.PI / 2 * 3;
+          const step = Math.PI / spikes;
+          ctx.beginPath();
+          for (let i = 0; i < spikes; i++) {
+            const x1 = Math.cos(rot) * outerR;
+            const y1 = Math.sin(rot) * outerR;
+            ctx.lineTo(x1, y1);
+            rot += step;
+            const x2 = Math.cos(rot) * innerR;
+            const y2 = Math.sin(rot) * innerR;
+            ctx.lineTo(x2, y2);
+            rot += step;
+          }
+          ctx.closePath();
+          ctx.fillStyle = this.color;
+          ctx.fill();
+          ctx.shadowBlur = 5;
+          ctx.shadowColor = 'rgba(255,200,100,0.5)';
+        }
+        else {
+          // Square candy with rounded corners
+          const r = this.size / 2;
+          ctx.beginPath();
+          ctx.roundRect(-r, -r, this.size, this.size, r * 0.3);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+          // sprinkle effect
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          ctx.beginPath();
+          ctx.arc(-r/2, -r/2, r/5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(r/2, r/2, r/5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    }
+    
+    // Helper for rounded rect
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.moveTo(x+r, y);
+        this.lineTo(x+w-r, y);
+        this.quadraticCurveTo(x+w, y, x+w, y+r);
+        this.lineTo(x+w, y+h-r);
+        this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+        this.lineTo(x+r, y+h);
+        this.quadraticCurveTo(x, y+h, x, y+h-r);
+        this.lineTo(x, y+r);
+        this.quadraticCurveTo(x, y, x+r, y);
+        return this;
+      };
+    }
+    
+    // Snowflake functions
+    function createSnowflake(x = null, y = null) {
+      return {
+        x: x !== null ? x : Math.random() * width,
+        y: y !== null ? y : Math.random() * height,
+        radius: Math.random() * (MAX_SNOW_RADIUS - MIN_SNOW_RADIUS) + MIN_SNOW_RADIUS,
+        speedY: Math.random() * 1.2 + 0.4,
+        speedX: (Math.random() - 0.5) * 0.5,
+        opacity: Math.random() * 0.5 + 0.3
+      };
+    }
+    
+    function initSnow() {
+      snowflakes = [];
+      for (let i = 0; i < snowCount; i++) {
+        snowflakes.push(createSnowflake());
+      }
+    }
+    
+    function addSnowflakes(count = 15) {
+      for (let i = 0; i < count; i++) {
+        snowflakes.push(createSnowflake());
+      }
+      if (snowflakes.length > 200) snowflakes = snowflakes.slice(0, 180);
+    }
+    
+    function initCandies() {
+      candies = [];
+      for (let i = 0; i < candyCount; i++) {
+        candies.push(new Candy());
+      }
+    }
+    
+    function addCandyBurst(x, y) {
+      for (let i = 0; i < 12; i++) {
+        let offX = x + (Math.random() - 0.5) * 80;
+        let offY = y + (Math.random() - 0.5) * 80;
+        offX = Math.min(width, Math.max(0, offX));
+        offY = Math.min(height, Math.max(0, offY));
+        const newCandy = new Candy(offX, offY);
+        newCandy.speedY = Math.random() * 1 + 0.3;
+        newCandy.speedX = (Math.random() - 0.5) * 1.2;
+        candies.push(newCandy);
+      }
+      if (candies.length > 120) candies = candies.slice(0, 100);
+    }
+    
+    function addExtraCandies(count = 8) {
+      for (let i = 0; i < count; i++) {
+        candies.push(new Candy());
+      }
+      if (candies.length > 120) candies = candies.slice(0, 100);
+    }
+    
+    // Animation: Snow
+    let snowTime = 0;
+    function animateSnow() {
+      if (!snowCtx) return;
+      snowCtx.clearRect(0, 0, width, height);
+      snowTime += 0.01;
+      
+      for (let i = 0; i < snowflakes.length; i++) {
+        const flake = snowflakes[i];
+        flake.y += flake.speedY;
+        flake.x += flake.speedX + wind * 0.05;
+        
+        if (flake.y > height + 20) {
+          flake.y = -20;
+          flake.x = Math.random() * width;
+        }
+        if (flake.x > width + 25) flake.x = -25;
+        if (flake.x < -25) flake.x = width + 25;
+        
+        snowCtx.beginPath();
+        snowCtx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+        snowCtx.fillStyle = `rgba(255, 255, 250, ${flake.opacity})`;
+        snowCtx.fill();
+        
+        if (flake.radius > 3) {
+          snowCtx.beginPath();
+          snowCtx.arc(flake.x, flake.y, flake.radius * 0.55, 0, Math.PI * 2);
+          snowCtx.fillStyle = `rgba(255, 255, 245, 0.7)`;
+          snowCtx.fill();
+        }
+      }
+      requestAnimationFrame(animateSnow);
+    }
+    
+    // Animation: Candies
+    function animateCandies() {
+      if (!candyCtx) return;
+      candyCtx.clearRect(0, 0, width, height);
+      
+      for (let i = 0; i < candies.length; i++) {
+        const candy = candies[i];
+        candy.update();
+        candy.draw(candyCtx);
+      }
+      requestAnimationFrame(animateCandies);
+    }
+    
+    // Wind control
+    let targetWind = 0.12;
+    function handleMouseMove(e) {
+      const normX = (e.clientX / width) * 2 - 1;
+      targetWind = normX * 0.5;
+    }
+    
+    function handleTouchMove(e) {
+      if (e.touches.length) {
+        const touchX = e.touches[0].clientX;
+        const normX = (touchX / width) * 2 - 1;
+        targetWind = normX * 0.5;
+      }
+    }
+    
+    function smoothWindLoop() {
+      wind += (targetWind - wind) * 0.05;
+      requestAnimationFrame(smoothWindLoop);
+    }
+    
+    // Haptic feedback
+    function subtleFeedback() {
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(25);
+      }
+    }
+    
+    // Resize
+    function resizeAll() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      snowCanvas.width = width;
+      snowCanvas.height = height;
+      candyCanvas.width = width;
+      candyCanvas.height = height;
+      initSnow();
+      initCandies();
+    }
+    
+    // Buttons and interactions
+    const moreSnowBtn = document.getElementById('moreSnowBtn');
+    const candyBurstBtn = document.getElementById('candyBurstBtn');
+    const doubleTapArea = document.getElementById('doubleTapArea');
+    const container = document.querySelector('.app-container');
+    
+    moreSnowBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addSnowflakes(12);
+      addExtraCandies(3);
+      subtleFeedback();
+    });
+    
+    candyBurstBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const centerX = width / 2;
+      const centerY = height / 2;
+      addCandyBurst(centerX, centerY);
+      subtleFeedback();
+    });
+    
+    // Double tap anywhere
+    function handleDoubleTap(x, y) {
+      addCandyBurst(x, y);
+      addSnowflakes(5);
+      subtleFeedback();
+    }
+    
+    container.addEventListener('dblclick', (e) => {
+      const rect = container.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+      handleDoubleTap(clickX, clickY);
+    });
+    
+    let lastTap = 0;
+    container.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      const tapDelay = now - lastTap;
+      if (tapDelay < 300 && tapDelay > 40) {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const rect = container.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        handleDoubleTap(touchX, touchY);
+      }
+      lastTap = now;
+    });
+    
+    // Device orientation for gentle wind
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', (e) => {
+        if (e.gamma) {
+          const gamma = Math.min(0.6, Math.max(-0.6, e.gamma / 60));
+          targetWind = gamma * 0.7;
+        }
+      });
+    }
+    
+    window.addEventListener('resize', () => resizeAll());
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove);
+    
+    resizeAll();
+    smoothWindLoop();
+    animateSnow();
+    animateCandies();
+    
+    // Add periodic candy spawn (gentle)
+    setInterval(() => {
+      if (candies.length < 45) {
+        candies.push(new Candy());
+      }
+    }, 8000);
+    
+    // Performance guard
+    setInterval(() => {
+      if (snowflakes.length > 150) snowflakes = snowflakes.slice(0, 140);
+      if (candies.length > 110) candies = candies.slice(0, 95);
+    }, 20000);
+    
+    console.log('❄️🍭 Snow Candy — Beautiful background with candies and gentle snow');
+  })();
+</script>
 </body>
 </html>
+```
