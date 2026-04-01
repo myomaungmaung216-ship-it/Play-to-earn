@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Snowfall App</title>
+    <style>
+        /* တစ်ခွက်လုံးကို အပြာရောင် နောက်ခံထားခြင်း */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #0d1b2a, #1b263b); /* အမှောင်ဘက်သွားတဲ့ အပြာရောင် */
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        /* App ရဲ့ အဓိက စာသား */
+        h1 {
+            z-index: 10;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        /* နှင်းပွင့်လေးများအတွက် ပုံစံ */
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            background-color: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: fall linear infinite;
+        }
+
+        /* နှင်းကျမည့် Animation */
+        @keyframes fall {
+            0% {
+                top: -10px;
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                top: 100vh;
+                transform: translateX(50px);
+                opacity: 0.3;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome to My App</h1>
+
+    <script>
+        // နှင်းပွင့်လေးတွေ အလိုအလျောက် ထွက်လာစေရန် JavaScript
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            
+            // နှင်းပွင့်ရဲ့ အရွယ်အစားကို ကျပန်း (Random) ပေးခြင်း
+            const size = Math.random() * 5 + 2 + 'px';
+            snowflake.style.width = size;
+            snowflake.style.height = size;
+
+            // နှင်းပွင့်ကျမည့် နေရာကို Random ပေးခြင်း
+            snowflake.style.left = Math.random() * 100 + 'vw';
+            
+            // နှင်းကျမည့် အမြန်နှုန်းကို Random ပေးခြင်း
+            snowflake.style.animationDuration = Math.random() * 3 + 2 + 's'; 
+            
+            // နှင်းပွင့်၏ ဖြူစင်မှုနှုန်း (Opacity) ကို Random ပေးခြင်း
+            snowflake.style.opacity = Math.random();
+
+            document.body.appendChild(snowflake);
+
+            // နှင်းပွင့်လေးတွေ အောက်ရောက်ရင် ဖျက်ထုတ်ပြီး Memory မပြည့်အောင် လုပ်ခြင်း
+            setTimeout(() => {
+                snowflake.remove();
+            }, 5000);
+        }
+
+        // ၅၀ မီလီစက္ကန့်တိုင်း နှင်းတစ်ပွင့် ထုတ်ပေးရန်
+        setInterval(createSnowflake, 50;
+    </script>
+</body>
+</html>
