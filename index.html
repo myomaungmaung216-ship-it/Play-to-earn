@@ -1,76 +1,472 @@
+```html
 <!DOCTYPE html>
 <html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blue Snowfall App</title>
-    <style>
-        /* တစ်ခွက်လုံးကို မိုးပြာရောင် နောက်ခံထားခြင်း */
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            /* ညဘက် ကောင်းကင်ပြာလို မိုးပြာရောင် ပုံစံမျိုး */
-            background: linear-gradient(to bottom, #4a90e2, #144272); 
-            overflow: hidden; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Snow Blue App - နှင်းကျသောအက်ပ်</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
 
-        /* နှင်းပွင့်လေးများအတွက် ပုံစံ */
-        .snowflake {
-            position: absolute;
-            top: -10px; 
-            background-color: white;
-            border-radius: 50%; 
-            pointer-events: none; 
-            animation: fall linear infinite; 
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
-        }
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: system-ui, 'Segoe UI', -apple-system, 'Helvetica Neue', sans-serif;
+      background: #0a2f6c;
+    }
 
-        /* နှင်းကျမည့် Animation */
-        @keyframes fall {
-            0% {
-                top: -10px;
-                transform: translateX(0);
-                opacity: 1;
-            }
-            100% {
-                top: 100vh; 
-                transform: translateX(50px); 
-                opacity: 0.2; 
-            }
-        }
-    </style>
+    /* Main App Container - Blue Background */
+    .app-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #0a3e7a 0%, #05204a 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    /* Content Card */
+    .content-card {
+      text-align: center;
+      z-index: 10;
+      padding: 2rem 1.8rem;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      border-radius: 56px;
+      margin: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.25);
+      animation: fadeSlideUp 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #ffffff, #b8dcff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .snow-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+      animation: gentleFloat 3s ease-in-out infinite;
+    }
+
+    .tagline {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    .feature-badge {
+      margin-top: 1.8rem;
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Interactive Buttons */
+    .btn-group {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      padding: 0.75rem 1.6rem;
+      border-radius: 60px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2a7fff, #1557d0);
+      border: none;
+      box-shadow: 0 6px 18px rgba(0, 80, 200, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.95);
+      box-shadow: 0 3px 10px rgba(0, 80, 200, 0.5);
+    }
+
+    /* Snow Canvas */
+    #snow-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Status Bar Simulation */
+    .status-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 22px;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+      pointer-events: none;
+    }
+
+    /* Footer hint */
+    .footer-hint {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+      z-index: 10;
+      pointer-events: none;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(35px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* Responsive */
+    @media (max-width: 550px) {
+      h1 { font-size: 1.8rem; }
+      .content-card { padding: 1.5rem 1.2rem; margin: 16px; }
+      .btn { padding: 0.6rem 1.3rem; font-size: 0.85rem; }
+      .snow-icon { font-size: 2.4rem; }
+    }
+  </style>
 </head>
 <body>
 
-    <script>
-        function createSnowflake() {
-            const snowflake = document.createElement('div');
-            snowflake.classList.add('snowflake');
-            
-            const size = Math.random() * 5 + 2 + 'px';
-            snowflake.style.width = size;
-            snowflake.style.height = size;
+<div class="app-container">
+  <canvas id="snow-canvas"></canvas>
 
-            snowflake.style.left = Math.random() * 100 + 'vw';
-            
-            const duration = Math.random() * 3 + 2;
-            snowflake.style.animationDuration = duration + 's'; 
-            
-            snowflake.style.opacity = Math.random();
+  <div class="status-bar">
+    <span>❄️ 9:41</span>
+    <span>SNOW BLUE</span>
+    <span>📱 100%</span>
+  </div>
 
-            document.body.appendChild(snowflake);
+  <div class="content-card">
+    <div class="snow-icon">❄️✨</div>
+    <h1>နှင်းများကျဆဲ</h1>
+    <p class="tagline">အပြာရောင် နောက်ခံလှလှလေး<br>နှင်းများ အေးအေးဆေးဆေး ကျနေပါတယ်</p>
+    
+    <div class="feature-badge">
+      <span class="badge">❄️ နှင်း ၁၂၀+</span>
+      <span class="badge">🌬️ လေညင်းညင်း</span>
+      <span class="badge">💙 အပြာရောင်</span>
+    </div>
 
-            setTimeout(() => {
-                snowflake.remove();
-            }, (duration + 1) * 1000);
+    <div class="btn-group">
+      <button class="btn" id="moreSnowBtn">❄️ နှင်းပိုကျစေ</button>
+      <button class="btn btn-primary" id="greetingBtn">✨ နှုတ်ဆက်စကား</button>
+    </div>
+  </div>
+  <div class="footer-hint">
+    ✨ နှစ်ချက်နှိပ်ရင် နှင်းစေ့ထပ်တိုး | အေးမြသောဆောင်းရာသီခံစားမှု ✨
+  </div>
+</div>
+
+<script>
+  (function() {
+    // -------------------- SNOW SYSTEM --------------------
+    const canvas = document.getElementById('snow-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let snowflakes = [];
+    let snowCount = 135;        // base snow count - rich but smooth
+    let wind = 0.18;
+    
+    // Snowflake settings
+    const MIN_RADIUS = 2;
+    const MAX_RADIUS = 5.5;
+    
+    // Resize handler
+    function resizeCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      initSnow();
+    }
+    
+    function initSnow() {
+      snowflakes = [];
+      for (let i = 0; i < snowCount; i++) {
+        snowflakes.push(createSnowflake());
+      }
+    }
+    
+    function createSnowflake(x = null, y = null) {
+      return {
+        x: x !== null ? x : Math.random() * width,
+        y: y !== null ? y : Math.random() * height,
+        radius: Math.random() * (MAX_RADIUS - MIN_RADIUS) + MIN_RADIUS,
+        speedY: Math.random() * 1.4 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.7,
+        opacity: Math.random() * 0.55 + 0.35
+      };
+    }
+    
+    function addSnowflakes(count = 30) {
+      for (let i = 0; i < count; i++) {
+        snowflakes.push(createSnowflake());
+      }
+      // keep performance under control (max ~550 flakes)
+      if (snowflakes.length > 580) {
+        snowflakes = snowflakes.slice(0, 550);
+      }
+    }
+    
+    // animate snow
+    function animateSnow() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, width, height);
+      
+      for (let i = 0; i < snowflakes.length; i++) {
+        const flake = snowflakes[i];
+        
+        // update position
+        flake.y += flake.speedY;
+        flake.x += flake.speedX + wind * 0.06;
+        
+        // boundary reset (top to bottom)
+        if (flake.y > height + 15) {
+          flake.y = -15;
+          flake.x = Math.random() * width;
         }
-
-        setInterval(createSnowflake, 50); 
-    </script>
+        if (flake.x > width + 25) flake.x = -25;
+        if (flake.x < -25) flake.x = width + 25;
+        
+        // draw snowflake with soft glow
+        ctx.beginPath();
+        ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 250, ${flake.opacity})`;
+        ctx.fill();
+        
+        // extra inner sparkle for bigger flakes
+        if (flake.radius > 3.2) {
+          ctx.beginPath();
+          ctx.arc(flake.x, flake.y, flake.radius * 0.55, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 245, 0.85)`;
+          ctx.fill();
+        }
+      }
+      
+      requestAnimationFrame(animateSnow);
+    }
+    
+    // gentle wind based on mouse/touch (playful)
+    let targetWind = 0.18;
+    function handleMouseMove(e) {
+      const normX = (e.clientX / width) * 2 - 1;
+      targetWind = normX * 0.65;
+    }
+    
+    function handleTouchMove(e) {
+      if (e.touches.length) {
+        const touchX = e.touches[0].clientX;
+        const normX = (touchX / width) * 2 - 1;
+        targetWind = normX * 0.65;
+      }
+    }
+    
+    function smoothWindLoop() {
+      wind += (targetWind - wind) * 0.05;
+      requestAnimationFrame(smoothWindLoop);
+    }
+    
+    // UI Helper: toast message (Myanmar friendly)
+    function showToast(message, duration = 1600) {
+      const toast = document.createElement('div');
+      toast.innerText = message;
+      toast.style.position = 'fixed';
+      toast.style.bottom = '28%';
+      toast.style.left = '50%';
+      toast.style.transform = 'translateX(-50%)';
+      toast.style.backgroundColor = 'rgba(10, 30, 55, 0.9)';
+      toast.style.backdropFilter = 'blur(20px)';
+      toast.style.color = 'white';
+      toast.style.padding = '12px 24px';
+      toast.style.borderRadius = '60px';
+      toast.style.fontSize = '0.95rem';
+      toast.style.fontWeight = '500';
+      toast.style.zIndex = '999';
+      toast.style.whiteSpace = 'nowrap';
+      toast.style.fontFamily = 'system-ui';
+      toast.style.border = '1px solid rgba(255,255,255,0.4)';
+      toast.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3)';
+      toast.style.pointerEvents = 'none';
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.35s ease';
+        setTimeout(() => toast.remove(), 400);
+      }, duration);
+    }
+    
+    // -------------------- BUTTONS & INTERACTIONS --------------------
+    const moreSnowBtn = document.getElementById('moreSnowBtn');
+    const greetingBtn = document.getElementById('greetingBtn');
+    
+    // More snow button
+    moreSnowBtn.addEventListener('click', () => {
+      addSnowflakes(45);
+      showToast("❄️ နှင်းများ ပိုမိုစိုစွတ်လာပါပြီ ❄️ (+45)", 1300);
+    });
+    
+    // Greeting button with random sweet messages
+    const greetings = [
+      "မင်္ဂလာပါ! နှင်းတွေနဲ့အတူ ပျော်ရွှင်ပါစေ ❄️",
+      "အေးမြတဲ့ နှင်းများကြား နွေးထွေးတဲ့ နှုတ်ဆက်စကား ✨",
+      "နှင်းပွင့်တိုင်း ပျော်ရွှင်မှု ပို့ဆောင်ပေးပါစေ 💙",
+      "ဒီအပြာရောင်အက်ပ်လေးက သင့်အတွက် အေးချမ်းမှု ယူဆောင်လာပါစေ",
+      "❄️ ဆောင်းရာသီရဲ့ လှပမှုကို ခံစားလိုက်ပါ ❄️"
+    ];
+    let greetingIndex = 0;
+    
+    greetingBtn.addEventListener('click', () => {
+      const msg = greetings[greetingIndex % greetings.length];
+      showToast(msg, 2000);
+      greetingIndex++;
+    });
+    
+    // Double tap on container: add cluster of snowflakes near tap position
+    const container = document.querySelector('.app-container');
+    container.addEventListener('dblclick', (e) => {
+      const rect = container.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+      for (let i = 0; i < 12; i++) {
+        const offsetX = (Math.random() - 0.5) * 70;
+        const offsetY = (Math.random() - 0.5) * 60;
+        let newX = clickX + offsetX;
+        let newY = clickY + offsetY;
+        newX = Math.min(width, Math.max(0, newX));
+        newY = Math.min(height, Math.max(0, newY));
+        snowflakes.push(createSnowflake(newX, newY));
+      }
+      showToast("✨ နှင်းစေ့များ ထပ်တိုးသွားပါပြီ ✨", 900);
+      if (snowflakes.length > 600) snowflakes = snowflakes.slice(0, 570);
+    });
+    
+    // Also touch friendly for double tap on mobile (using touchend with time tracking)
+    let lastTap = 0;
+    container.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      const tapDelay = now - lastTap;
+      if (tapDelay < 300 && tapDelay > 40) {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const rect = container.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        for (let i = 0; i < 10; i++) {
+          let offX = touchX + (Math.random() - 0.5) * 70;
+          let offY = touchY + (Math.random() - 0.5) * 60;
+          offX = Math.min(width, Math.max(0, offX));
+          offY = Math.min(height, Math.max(0, offY));
+          snowflakes.push(createSnowflake(offX, offY));
+        }
+        showToast("❄️ နှင်းစေ့ထပ်တိုး", 800);
+        if (snowflakes.length > 600) snowflakes = snowflakes.slice(0, 570);
+      }
+      lastTap = now;
+    });
+    
+    // window resize event
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+    });
+    
+    // initial setup
+    resizeCanvas();
+    smoothWindLoop();
+    animateSnow();
+    
+    // mouse/touch wind effects
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove);
+    
+    // ensure graceful performance
+    setInterval(() => {
+      if (snowflakes.length > 550) {
+        snowflakes = snowflakes.slice(0, 530);
+      }
+    }, 10000);
+    
+    // Small console greeting for devs (optional)
+    console.log('❄️ Snow Blue App ready — နှင်းများကျနေပါပြီ | GitHub ready');
+  })();
+</script>
 </body>
 </html>
+```
