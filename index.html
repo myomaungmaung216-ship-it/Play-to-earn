@@ -2,16 +2,18 @@
 <html lang="my">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Blue Snowfall App</title>
     <style>
-        /* တစ်ခွက်လုံးကို အပြာရောင် နောက်ခံထားခြင်း */
-        body {
+        /* တစ်ခွက်လုံးကို အပြာရောင် ရင့်ရင့် နောက်ခံထားခြင်း */
+        body, html {
             margin: 0;
             padding: 0;
-            background: linear-gradient(to bottom, #0d1b2a, #1b263b); /* အမှောင်ဘက်သွားတဲ့ အပြာရောင် */
-            height: 100vh;
-            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            /* မင်းရဲ့ ပုံထဲကထက် နည်းနည်းပိုလင်းတဲ့ အပြာရောင် (gradient) */
+            background: linear-gradient(to bottom, #081121, #13274F);
+            overflow: hidden; /* screen အပြင်ဘက် scroll မဖြစ်အောင် */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,24 +21,31 @@
             color: white;
         }
 
-        /* App ရဲ့ အဓိက စာသား */
+        /* App ရဲ့ အဓိက စာသား - မင်းပုံထဲကအတိုင်း Glow ပုံစံထည့်ထားတယ် */
         h1 {
-            z-index: 10;
-            font-size: 2.5rem;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            z-index: 10; /* စာသားကို နှင်းတွေရဲ့ အပေါ်မှာ ထားဖို့ */
+            font-size: 2.8rem;
+            text-align: center;
+            /* စာသားကို glow ဖြစ်စေတဲ့ effect */
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 
+                         0 0 25px rgba(255, 255, 255, 0.5);
+            pointer-events: none; /* စာသားကို ထိလို့မရအောင် */
         }
 
         /* နှင်းပွင့်လေးများအတွက် ပုံစံ */
         .snowflake {
             position: absolute;
-            top: -10px;
+            top: -10px; /* screen အပေါ်ဘက် အပြင်ကနေ စကျမယ် */
             background-color: white;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: fall linear infinite;
+            border-radius: 50%; /* ဝိုင်းဝိုင်းလေးဖြစ်အောင် */
+            pointer-events: none; /* နှင်းပွင့်တွေကို ထိလို့မရအောင် */
+            /* နှင်းကျမည့် animation နာမည်၊ ကြာချိန်၊ အမျိုးအစား */
+            animation: fall linear infinite; 
+            /* soft ဖြစ်အောင် အနားသတ်ကို ဝါးထားခြင်း */
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
         }
 
-        /* နှင်းကျမည့် Animation */
+        /* နှင်းကျမည့် Animation - အပေါ်ကနေ အောက်ကို */
         @keyframes fall {
             0% {
                 top: -10px;
@@ -44,9 +53,10 @@
                 opacity: 1;
             }
             100% {
-                top: 100vh;
-                transform: translateX(50px);
-                opacity: 0.3;
+                top: 100vh; /* screen အောက်ခြေအထိ */
+                /* ကျနေရင်း ဘေးကို နည်းနည်း လွင့်သွားအောင် */
+                transform: translateX(100px); 
+                opacity: 0.2; /* အောက်ရောက်ရင် မှိန်သွားမယ် */
             }
         }
     </style>
@@ -61,30 +71,36 @@
             const snowflake = document.createElement('div');
             snowflake.classList.add('snowflake');
             
-            // နှင်းပွင့်ရဲ့ အရွယ်အစားကို ကျပန်း (Random) ပေးခြင်း
+            // နှင်းပွင့်ရဲ့ အရွယ်အစားကို ကျပန်း (Random) ပေးခြင်း (၂ ကနေ ၇ pixel)
             const size = Math.random() * 5 + 2 + 'px';
             snowflake.style.width = size;
             snowflake.style.height = size;
 
-            // နှင်းပွင့်ကျမည့် နေရာကို Random ပေးခြင်း
+            // နှင်းပွင့်စကျမည့် နေရာကို ဘယ်-ညာ ကျပန်း (Random) ပေးခြင်း
             snowflake.style.left = Math.random() * 100 + 'vw';
             
-            // နှင်းကျမည့် အမြန်နှုန်းကို Random ပေးခြင်း
-            snowflake.style.animationDuration = Math.random() * 3 + 2 + 's'; 
+            // နှင်းကျမည့် ကြာချိန် (အမြန်နှုန်း) ကို ကျပန်း (Random) ပေးခြင်း (၂ ကနေ ၅ စက္ကန့်)
+            // ကြာချိန် မတူတော့ နှင်းတွေက တပြိုင်နက်တည်း ကျမနေဘဲ သဘာဝကျပါတယ်
+            const duration = Math.random() * 3 + 2;
+            snowflake.style.animationDuration = duration + 's'; 
             
-            // နှင်းပွင့်၏ ဖြူစင်မှုနှုန်း (Opacity) ကို Random ပေးခြင်း
+            // နှင်းပွင့်ရဲ့ အစလင်းအားကို ကျပန်း (Random) ပေးခြင်း
             snowflake.style.opacity = Math.random();
 
             document.body.appendChild(snowflake);
 
-            // နှင်းပွင့်လေးတွေ အောက်ရောက်ရင် ဖျက်ထုတ်ပြီး Memory မပြည့်အောင် လုပ်ခြင်း
+            // နှင်းပွင့်လေးတွေ အောက်ရောက်ရင် ဖျက်ထုတ်ပစ်ခြင်း (Memory မပြည့်အောင်)
+            // animation ကြာချိန်ထက် နည်းနည်းပိုပြီးမှ ဖျက်တယ်
             setTimeout(() => {
                 snowflake.remove();
-            }, 5000);
+            }, (duration + 1) * 1000);
         }
 
-        // ၅၀ မီလီစက္ကန့်တိုင်း နှင်းတစ်ပွင့် ထုတ်ပေးရန်
-        setInterval(createSnowflake, 50;
+        // --- ပြင်ဆင်လိုက်တဲ့နေရာ ---
+        // ၅၀ မီလီစက္ကန့်တိုင်း နှင်းတစ်ပွင့် အသစ်ထုတ်ပေးရန် (setInterval function)
+        // code syntax error ဖြစ်နေတဲ့ ပိတ်ကွင်းကို ပြန်ထည့်လိုက်ပါတယ်
+        setInterval(createSnowflake, 50); 
+
     </script>
 </body>
 </html>
