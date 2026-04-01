@@ -1,516 +1,172 @@
-```html
-<!DOCTYPE html>
-<html lang="my">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Sky Blue - နှင်းနှင့် သကြားလုံး</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      user-select: none;
-    }
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import NotFound from "@/pages/not-found";
+import Home from "@/pages/Home";
 
-    body {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      background: #7ec8e0; /* fallback sky blue */
-    }
+const queryClient = new QueryClient();
 
-    /* Main container - sky blue background */
-    .app-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(145deg, #9ad7f5 0%, #6bb5d9 40%, #4a90b0 100%);
-      overflow: hidden;
-    }
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
 
-    /* Canvases for snow and candies */
-    #snow-canvas, #candy-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-    #snow-canvas { z-index: 2; }
-    #candy-canvas { z-index: 3; }
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
-    /* Ambient cloud glow (soft) */
-    .cloud-glow {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 40% 30%, rgba(255,250,210,0.2) 0%, rgba(100,160,200,0.1) 80%);
-      pointer-events: none;
-      z-index: 1;
-      animation: softPulse 8s ease-in-out infinite;
-    }
+export default App;
+        import React, { useEffect, useRef } from 'react';
 
-    @keyframes softPulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.7; }
-    }
+interface Snowflake {
+  x: number;
+  y: number;
+  radius: number;
+  vx: number;
+  vy: number;
+  opacity: number;
+  phase: number;
+}
 
-    /* Visible Play Button - Sky blue style (but vibrant blue) */
-    .play-button {
-      position: absolute;
-      bottom: 12%;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 20;
-      background: linear-gradient(135deg, #1e88e5, #0d47a1);
-      border: none;
-      border-radius: 60px;
-      padding: 16px 40px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.3);
-      transition: all 0.2s ease;
-      backdrop-filter: blur(4px);
-    }
+export function SnowBackground() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    .play-button:active {
-      transform: translateX(-50%) scale(0.96);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Play icon (triangle) */
-    .play-icon {
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 14px 0 14px 24px;
-      border-color: transparent transparent transparent white;
-      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
-    }
-
-    .button-text {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: white;
-      letter-spacing: 1px;
-      font-family: system-ui, 'Segoe UI', sans-serif;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    /* Responsive */
-    @media (max-width: 550px) {
-      .play-button { padding: 12px 28px; }
-      .play-icon { border-width: 10px 0 10px 18px; }
-      .button-text { font-size: 1.2rem; }
-    }
-
-    /* Hidden double-tap area for extra fun (optional, no text) */
-    .touch-area {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      height: 80px;
-      z-index: 5;
-      opacity: 0;
-      pointer-events: auto;
-    }
-  </style>
-</head>
-<body>
-<div class="app-container">
-  <div class="cloud-glow"></div>
-  <canvas id="snow-canvas"></canvas>
-  <canvas id="candy-canvas"></canvas>
-
-  <!-- Visible Play Button -->
-  <button class="play-button" id="playButton">
-    <span class="play-icon"></span>
-    <span class="button-text">PLAY</span>
-  </button>
-
-  <!-- Hidden double-tap zone (optional, no text) -->
-  <div class="touch-area" id="doubleTapArea"></div>
-</div>
-
-<script>
-  (function() {
-    // ---------- CANVAS ELEMENTS ----------
-    const snowCanvas = document.getElementById('snow-canvas');
-    const candyCanvas = document.getElementById('candy-canvas');
-    let snowCtx = snowCanvas.getContext('2d');
-    let candyCtx = candyCanvas.getContext('2d');
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     let width = window.innerWidth;
     let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-    // ---------- SNOW SYSTEM (gentle amount) ----------
-    let snowflakes = [];
-    const SNOW_COUNT = 48;   // light snow
+    const numFlakes = Math.min(Math.floor((width * height) / 4000), 500);
+    const snowflakes: Snowflake[] = [];
 
-    // ---------- CANDY SYSTEM (colorful, floating) ----------
-    let candies = [];
-    let candyCount = 28;
-
-    let wind = 0.12;
-    let targetWind = 0.12;
-
-    // Helper: resize all
-    function resizeAll() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      snowCanvas.width = width;
-      snowCanvas.height = height;
-      candyCanvas.width = width;
-      candyCanvas.height = height;
-
-      initSnow();
-      initCandies();
-    }
-
-    // --- Snowflake ---
-    function createSnowflake(x = null, y = null) {
-      return {
-        x: x !== null ? x : Math.random() * width,
-        y: y !== null ? y : Math.random() * height,
-        radius: Math.random() * 3.5 + 1.2,
-        speedY: Math.random() * 0.8 + 0.3,
-        speedX: (Math.random() - 0.5) * 0.45,
-        opacity: Math.random() * 0.5 + 0.3
-      };
-    }
-
-    function initSnow() {
-      snowflakes = [];
-      for (let i = 0; i < SNOW_COUNT; i++) {
-        snowflakes.push(createSnowflake());
-      }
-    }
-
-    function addSnowflakes(amount = 6) {
-      for (let i = 0; i < amount; i++) {
-        snowflakes.push(createSnowflake());
-      }
-      if (snowflakes.length > 100) snowflakes = snowflakes.slice(0, 90);
-    }
-
-    // --- Candy classes (beautiful & various) ---
-    const candyColors = [
-      '#FF6B6B', '#FF8C42', '#F9C74F', '#90BE6D', '#43AA8B',
-      '#577590', '#9B5DE5', '#F15BB5', '#FEE440', '#FF99C8',
-      '#A9DEF9', '#D0F4DE', '#FFD166', '#EF476F', '#3B9AE1'
-    ];
-
-    class Candy {
-      constructor(x = null, y = null) {
-        this.x = x !== null ? x : Math.random() * width;
-        this.y = y !== null ? y : Math.random() * height;
-        this.type = Math.floor(Math.random() * 4); // 0:round, 1:heart, 2:star, 3:square
-        this.size = Math.random() * 12 + 9;   // 9–21px
-        this.color = candyColors[Math.floor(Math.random() * candyColors.length)];
-        this.speedY = Math.random() * 0.55 + 0.2;
-        this.speedX = (Math.random() - 0.5) * 0.35;
-        this.rotation = Math.random() * Math.PI * 2;
-        this.rotSpeed = (Math.random() - 0.5) * 0.018;
-        this.opacity = Math.random() * 0.4 + 0.6;
-        this.glow = Math.random() * 0.4 + 0.3;
-      }
-
-      update() {
-        this.y += this.speedY;
-        this.x += this.speedX + wind * 0.045;
-        this.rotation += this.rotSpeed;
-
-        if (this.y > height + 70) {
-          this.y = -50;
-          this.x = Math.random() * width;
-        }
-        if (this.x > width + 70) this.x = -70;
-        if (this.x < -70) this.x = width + 70;
-      }
-
-      draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
-        ctx.globalAlpha = this.opacity;
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = `rgba(255, 200, 100, ${this.glow * 0.6})`;
-
-        const half = this.size / 2;
-
-        switch (this.type) {
-          case 0: // round lollipop style
-            ctx.beginPath();
-            ctx.arc(0, 0, half, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(-half * 0.3, -half * 0.3, half * 0.35, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(0, 0, half * 0.7, half * 0.2, 0, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 240, 180, 0.6)';
-            ctx.fill();
-            break;
-
-          case 1: // heart candy
-            ctx.beginPath();
-            const s = half;
-            ctx.moveTo(0, s * 0.5);
-            ctx.bezierCurveTo(-s, -s * 0.3, -s * 0.6, -s * 0.85, 0, -s * 0.2);
-            ctx.bezierCurveTo(s * 0.6, -s * 0.85, s, -s * 0.3, 0, s * 0.5);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(-s * 0.25, -s * 0.3, s * 0.25, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 250, 210, 0.7)';
-            ctx.fill();
-            break;
-
-          case 2: // star candy
-            const spikes = 5;
-            const outer = half;
-            const inner = half * 0.45;
-            let rot = Math.PI / 2 * 3;
-            const step = Math.PI / spikes;
-            ctx.beginPath();
-            for (let i = 0; i < spikes; i++) {
-              const x1 = Math.cos(rot) * outer;
-              const y1 = Math.sin(rot) * outer;
-              ctx.lineTo(x1, y1);
-              rot += step;
-              const x2 = Math.cos(rot) * inner;
-              const y2 = Math.sin(rot) * inner;
-              ctx.lineTo(x2, y2);
-              rot += step;
-            }
-            ctx.closePath();
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(0, 0, half * 0.35, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFF8E7';
-            ctx.fill();
-            break;
-
-          default: // square with rounded corners
-            const rad = half * 0.25;
-            ctx.beginPath();
-            ctx.moveTo(-half + rad, -half);
-            ctx.lineTo(half - rad, -half);
-            ctx.quadraticCurveTo(half, -half, half, -half + rad);
-            ctx.lineTo(half, half - rad);
-            ctx.quadraticCurveTo(half, half, half - rad, half);
-            ctx.lineTo(-half + rad, half);
-            ctx.quadraticCurveTo(-half, half, -half, half - rad);
-            ctx.lineTo(-half, -half + rad);
-            ctx.quadraticCurveTo(-half, -half, -half + rad, -half);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(-half * 0.4, -half * 0.4, half * 0.28, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 245, 200, 0.8)';
-            ctx.fill();
-            break;
-        }
-
-        ctx.shadowBlur = 0;
-        ctx.restore();
-      }
-    }
-
-    function initCandies() {
-      candies = [];
-      for (let i = 0; i < candyCount; i++) {
-        candies.push(new Candy());
-      }
-    }
-
-    function addCandyBurst(x, y) {
-      for (let i = 0; i < 14; i++) {
-        let offX = x + (Math.random() - 0.5) * 110;
-        let offY = y + (Math.random() - 0.5) * 110;
-        offX = Math.min(width, Math.max(0, offX));
-        offY = Math.min(height, Math.max(0, offY));
-        const newCandy = new Candy(offX, offY);
-        newCandy.speedY = Math.random() * 1.3 + 0.5;
-        newCandy.speedX = (Math.random() - 0.5) * 1.1;
-        candies.push(newCandy);
-      }
-      if (candies.length > 130) candies = candies.slice(0, 110);
-    }
-
-    function addExtraCandies(amount = 5) {
-      for (let i = 0; i < amount; i++) {
-        candies.push(new Candy());
-      }
-      if (candies.length > 130) candies = candies.slice(0, 110);
-    }
-
-    // --- Animation loops ---
-    function animateSnow() {
-      if (!snowCtx) return;
-      snowCtx.clearRect(0, 0, width, height);
-      for (let flake of snowflakes) {
-        flake.y += flake.speedY;
-        flake.x += flake.speedX + wind * 0.06;
-
-        if (flake.y > height + 20) {
-          flake.y = -20;
-          flake.x = Math.random() * width;
-        }
-        if (flake.x > width + 30) flake.x = -30;
-        if (flake.x < -30) flake.x = width + 30;
-
-        snowCtx.beginPath();
-        snowCtx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-        snowCtx.fillStyle = `rgba(255, 255, 250, ${flake.opacity})`;
-        snowCtx.fill();
-
-        if (flake.radius > 2.5) {
-          snowCtx.beginPath();
-          snowCtx.arc(flake.x, flake.y, flake.radius * 0.6, 0, Math.PI * 2);
-          snowCtx.fillStyle = `rgba(255, 255, 245, 0.7)`;
-          snowCtx.fill();
-        }
-      }
-      requestAnimationFrame(animateSnow);
-    }
-
-    function animateCandies() {
-      if (!candyCtx) return;
-      candyCtx.clearRect(0, 0, width, height);
-      for (let candy of candies) {
-        candy.update();
-        candy.draw(candyCtx);
-      }
-      requestAnimationFrame(animateCandies);
-    }
-
-    // --- Wind effect (mouse / touch) ---
-    function handleMove(clientX) {
-      const normX = (clientX / width) * 2 - 1;
-      targetWind = normX * 0.55;
-    }
-
-    function onMouseMove(e) {
-      handleMove(e.clientX);
-    }
-
-    function onTouchMove(e) {
-      if (e.touches.length) {
-        handleMove(e.touches[0].clientX);
-      }
-    }
-
-    function smoothWindLoop() {
-      wind += (targetWind - wind) * 0.06;
-      requestAnimationFrame(smoothWindLoop);
-    }
-
-    // --- Haptic feedback (silent) ---
-    function subtleFeedback() {
-      if (window.navigator && window.navigator.vibrate) {
-        window.navigator.vibrate(20);
-      }
-    }
-
-    // --- PLAY BUTTON ACTION: burst of candies + extra snowflakes, fun animation ---
-    const playBtn = document.getElementById('playButton');
-    playBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      // create a joyful candy burst from center
-      const centerX = width / 2;
-      const centerY = height / 2;
-      addCandyBurst(centerX, centerY);
-      addSnowflakes(8);
-      subtleFeedback();
-
-      // extra little effect: button flash
-      playBtn.style.transform = 'translateX(-50%) scale(0.95)';
-      setTimeout(() => {
-        if (playBtn) playBtn.style.transform = 'translateX(-50%) scale(1)';
-      }, 150);
-    });
-
-    // --- Optional: double-tap anywhere also bursts candies (hidden fun) ---
-    const container = document.querySelector('.app-container');
-    function handleDoubleTap(x, y) {
-      addCandyBurst(x, y);
-      addSnowflakes(5);
-      subtleFeedback();
-    }
-
-    container.addEventListener('dblclick', (e) => {
-      const rect = container.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      handleDoubleTap(x, y);
-    });
-
-    let lastTap = 0;
-    container.addEventListener('touchend', (e) => {
-      const now = Date.now();
-      if (now - lastTap < 300 && now - lastTap > 40) {
-        e.preventDefault();
-        const touch = e.changedTouches[0];
-        const rect = container.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-        handleDoubleTap(x, y);
-      }
-      lastTap = now;
-    });
-
-    // Device orientation for gentle wind
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', (e) => {
-        if (e.gamma !== null) {
-          const gamma = Math.min(0.6, Math.max(-0.6, e.gamma / 55));
-          targetWind = gamma * 0.7;
-        }
+    for (let i = 0; i < numFlakes; i++) {
+      snowflakes.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 2.5 + 0.5,
+        vx: (Math.random() - 0.5) * 1,
+        vy: Math.random() * 1.5 + 0.5,
+        opacity: Math.random() * 0.7 + 0.1,
+        phase: Math.random() * Math.PI * 2,
       });
     }
 
-    // --- Resize & start ---
-    window.addEventListener('resize', () => {
-      resizeAll();
-      snowCtx = snowCanvas.getContext('2d');
-      candyCtx = candyCanvas.getContext('2d');
-    });
+    let animationFrameId: number;
 
-    resizeAll();
-    smoothWindLoop();
-    animateSnow();
-    animateCandies();
+    function render() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, width, height);
 
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('touchmove', onTouchMove);
+      snowflakes.forEach((flake) => {
+        ctx.beginPath();
+        ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${flake.opacity})`;
 
-    // Periodically add a few candies to keep lively
-    setInterval(() => {
-      if (candies.length < 50) {
-        addExtraCandies(3);
-      }
-    }, 10000);
+        if (flake.radius > 1.5) {
+          ctx.shadowBlur = flake.radius * 2;
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+        } else {
+          ctx.shadowBlur = 0;
+        }
 
-    // Performance guard
-    setInterval(() => {
-      if (snowflakes.length > 95) snowflakes = snowflakes.slice(0, 85);
-      if (candies.length > 130) candies = candies.slice(0, 110);
-    }, 20000);
+        ctx.fill();
 
-    console.log('🌤️ Sky Blue Playground: Snow, Candies, and Play Button ready!');
-  })();
-</script>
-</body>
-</html>
-```
+        flake.phase += 0.01;
+        flake.x += flake.vx + Math.sin(flake.phase) * 0.5;
+        flake.y += flake.vy;
+
+        if (flake.y > height) { flake.y = -5; flake.x = Math.random() * width; }
+        if (flake.x > width + 5) { flake.x = -5; }
+        else if (flake.x < -5) { flake.x = width + 5; }
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    }
+
+    render();
+
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      if (canvas) { canvas.width = width; canvas.height = height; }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 z-0 pointer-events-none"
+      style={{ display: 'block' }}
+    />
+  );
+}
+      import { SnowBackground } from "@/components/SnowBackground";
+import { Button } from "@/components/ui/button";
+import { Snowflake } from "lucide-react";
+
+export default function Home() {
+  return (
+    <main className="relative min-h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-[#061025] via-[#102b54] to-[#4076a5]">
+
+      <SnowBackground />
+
+      <div className="absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-transparent to-[#030917]/60 pointer-events-none" />
+
+      <div className="relative z-20 flex min-h-[100dvh] flex-col items-center justify-center px-4 md:px-8">
+        <div className="text-center space-y-8 max-w-3xl mx-auto animate-in fade-in zoom-in duration-1000 slide-in-from-bottom-8">
+
+          <div className="inline-flex items-center gap-2 mb-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/5 backdrop-blur-md mx-auto">
+            <Snowflake className="w-4 h-4 text-blue-200" />
+            <span className="text-xs font-medium tracking-[0.2em] text-blue-100 uppercase">
+              A Winter Experience
+            </span>
+          </div>
+
+          <h1 className="font-serif text-6xl md:text-8xl lg:text-9xl font-medium text-white tracking-tight leading-[1.1] drop-shadow-xl">
+            First Snow
+          </h1>
+
+          <p className="font-sans text-lg md:text-xl text-blue-100/70 font-light max-w-xl mx-auto leading-relaxed mt-6">
+            A quiet moment in the cold. Watch the flakes fall, take a deep breath, and find stillness in the motion.
+          </p>
+
+          <div className="pt-12 flex items-center justify-center">
+            <Button
+              variant="outline"
+              className="text-white border-white/30 bg-white/5 hover:bg-white/20 hover:text-white backdrop-blur-md transition-all duration-300 rounded-full px-10 py-7 text-lg tracking-wide font-light"
+            >
+              Enter the cold
+            </Button>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  );
+}
