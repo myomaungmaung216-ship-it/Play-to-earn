@@ -1,358 +1,247 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Snow Blue - နှင်းကျအက်ပ်</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      user-select: none;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Snowfall App - Winter Wonderland</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      font-family: system-ui, 'Segoe UI', -apple-system, 'Helvetica Neue', sans-serif;
-      background: #05204a;
-    }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
 
-    /* Main App Container - Blue Background */
-    .app-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 30% 20%, #0f3b7a, #031a3a);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1.5s ease-in;
+        }
 
-    /* NO TEXT CONTENT - pure snow & minimal UI */
-    /* Only invisible buttons exist, no visible text on screen */
-    
-    /* Hidden control area - buttons are invisible but functional */
-    .hidden-controls {
-      position: absolute;
-      bottom: 30px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      z-index: 30;
-      opacity: 0;
-      pointer-events: none;
-    }
-    
-    /* Make buttons invisible but clickable area exists */
-    .invisible-btn {
-      width: 60px;
-      height: 60px;
-      border-radius: 60px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      pointer-events: auto;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    /* Optional tiny invisible hit area - no visual text */
-    .touch-area {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      height: 80px;
-      z-index: 25;
-      opacity: 0;
-      pointer-events: auto;
-    }
-    
-    /* Snow Canvas */
-    #snow-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 2;
-    }
-    
-    /* No text, no badges, no headers - clean screen */
-    
-    /* Very subtle floating hint (almost invisible but functional for user) - optional but not text heavy */
-    /* Completely removed all text from screen */
-  </style>
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            p {
+                font-size: 1rem;
+            }
+            
+            button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>❄️ Winter Wonderland ❄️</h1>
+        <p>Welcome to your peaceful snowy escape</p>
+        <button id="toggleSnowBtn">Pause Snow</button>
+    </div>
+    
+    <canvas id="snowCanvas"></canvas>
 
-<div class="app-container">
-  <canvas id="snow-canvas"></canvas>
-  
-  <!-- Invisible buttons - screen မှာ စာလုံးဘာမှ မပါဘူး၊ ခလုတ်တွေက မမြင်ရပေမယ့် အလုပ်လုပ်တယ် -->
-  <div class="hidden-controls">
-    <button class="invisible-btn" id="moreSnowBtn" aria-label="Add snow"></button>
-    <button class="invisible-btn" id="greetingBtn" aria-label="Greeting"></button>
-  </div>
-  
-  <!-- Double tap area (invisible) -->
-  <div class="touch-area" id="doubleTapArea"></div>
-</div>
+    <script>
+        class Snowfall {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.snowflakes = [];
+                this.isSnowing = true;
+                this.animationId = null;
+                
+                this.init();
+                this.setupEventListeners();
+                this.animate();
+                this.handleResize();
+            }
+            
+            init() {
+                this.numberOfSnowflakes = 150;
+                this.snowflakes = [];
+                
+                for (let i = 0; i < this.numberOfSnowflakes; i++) {
+                    this.snowflakes.push(this.createSnowflake());
+                }
+            }
+            
+            createSnowflake() {
+                return {
+                    x: Math.random() * this.canvas.width,
+                    y: Math.random() * this.canvas.height,
+                    radius: Math.random() * 4 + 1,
+                    speedY: Math.random() * 1.5 + 0.5,
+                    speedX: Math.random() * 0.5 - 0.25,
+                    opacity: Math.random() * 0.5 + 0.3,
+                    swing: Math.random() * Math.PI * 2,
+                    swingSpeed: Math.random() * 0.02 + 0.005
+                };
+            }
+            
+            drawSnowflake(snowflake) {
+                this.ctx.beginPath();
+                this.ctx.arc(snowflake.x, snowflake.y, snowflake.radius, 0, Math.PI * 2);
+                this.ctx.fillStyle = `rgba(255, 255, 255, ${snowflake.opacity})`;
+                this.ctx.fill();
+                
+                if (snowflake.radius > 2.5) {
+                    this.ctx.beginPath();
+                    this.ctx.arc(snowflake.x, snowflake.y, snowflake.radius * 0.8, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `rgba(255, 255, 255, ${snowflake.opacity * 0.5})`;
+                    this.ctx.fill();
+                }
+            }
+            
+            updateSnowflake(snowflake) {
+                snowflake.swing += snowflake.swingSpeed;
+                snowflake.x += snowflake.speedX + Math.sin(snowflake.swing) * 0.2;
+                snowflake.y += snowflake.speedY;
+                
+                if (snowflake.y > this.canvas.height) {
+                    snowflake.y = -snowflake.radius;
+                    snowflake.x = Math.random() * this.canvas.width;
+                    snowflake.speedY = Math.random() * 1.5 + 0.5;
+                }
+                
+                if (snowflake.x > this.canvas.width + snowflake.radius) {
+                    snowflake.x = -snowflake.radius;
+                } else if (snowflake.x < -snowflake.radius) {
+                    snowflake.x = this.canvas.width + snowflake.radius;
+                }
+            }
+            
+            draw() {
+                if (!this.isSnowing) return;
+                
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                for (let snowflake of this.snowflakes) {
+                    this.updateSnowflake(snowflake);
+                    this.drawSnowflake(snowflake);
+                }
+            }
+            
+            animate() {
+                this.draw();
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+            
+            toggleSnow() {
+                this.isSnowing = !this.isSnowing;
+                if (this.isSnowing) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                } else {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+                return this.isSnowing;
+            }
+            
+            handleResize() {
+                const resizeCanvas = () => {
+                    this.canvas.width = window.innerWidth;
+                    this.canvas.height = window.innerHeight;
+                    this.init();
+                };
+                
+                window.addEventListener('resize', () => {
+                    resizeCanvas();
+                });
+                
+                resizeCanvas();
+            }
+            
+            setupEventListeners() {
+                const toggleBtn = document.getElementById('toggleSnowBtn');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', () => {
+                        const isSnowing = this.toggleSnow();
+                        toggleBtn.textContent = isSnowing ? 'Pause Snow' : 'Start Snow';
+                    });
+                }
+            }
+            
+            cleanup() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+            }
+        }
 
-<script>
-  (function() {
-    // -------------------- SNOW SYSTEM --------------------
-    const canvas = document.getElementById('snow-canvas');
-    const ctx = canvas.getContext('2d');
-    
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    let snowflakes = [];
-    let snowCount = 150;        // rich snow effect
-    let wind = 0.2;
-    
-    const MIN_RADIUS = 2;
-    const MAX_RADIUS = 6;
-    
-    function resizeCanvas() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
-      initSnow();
-    }
-    
-    function initSnow() {
-      snowflakes = [];
-      for (let i = 0; i < snowCount; i++) {
-        snowflakes.push(createSnowflake());
-      }
-    }
-    
-    function createSnowflake(x = null, y = null) {
-      return {
-        x: x !== null ? x : Math.random() * width,
-        y: y !== null ? y : Math.random() * height,
-        radius: Math.random() * (MAX_RADIUS - MIN_RADIUS) + MIN_RADIUS,
-        speedY: Math.random() * 1.6 + 0.5,
-        speedX: (Math.random() - 0.5) * 0.8,
-        opacity: Math.random() * 0.6 + 0.3,
-        twinkle: Math.random() * Math.PI * 2
-      };
-    }
-    
-    function addSnowflakes(count = 40) {
-      for (let i = 0; i < count; i++) {
-        snowflakes.push(createSnowflake());
-      }
-      if (snowflakes.length > 650) {
-        snowflakes = snowflakes.slice(0, 600);
-      }
-    }
-    
-    // animate snow with gentle glow
-    let time = 0;
-    function animateSnow() {
-      if (!ctx) return;
-      ctx.clearRect(0, 0, width, height);
-      time += 0.02;
-      
-      for (let i = 0; i < snowflakes.length; i++) {
-        const flake = snowflakes[i];
-        
-        flake.y += flake.speedY;
-        flake.x += flake.speedX + wind * 0.07;
-        
-        if (flake.y > height + 20) {
-          flake.y = -20;
-          flake.x = Math.random() * width;
-        }
-        if (flake.x > width + 30) flake.x = -30;
-        if (flake.x < -30) flake.x = width + 30;
-        
-        // subtle twinkling effect
-        const twinkle = 0.2 + Math.sin(time * 2 + flake.twinkle) * 0.15;
-        const finalOpacity = Math.min(0.85, flake.opacity + twinkle * 0.15);
-        
-        ctx.beginPath();
-        ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 250, ${finalOpacity})`;
-        ctx.fill();
-        
-        // inner glow for larger flakes
-        if (flake.radius > 3.5) {
-          ctx.beginPath();
-          ctx.arc(flake.x, flake.y, flake.radius * 0.55, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 245, 0.9)`;
-          ctx.fill();
-        }
-      }
-      
-      requestAnimationFrame(animateSnow);
-    }
-    
-    // wind based on device movement / mouse
-    let targetWind = 0.2;
-    function handleMouseMove(e) {
-      const normX = (e.clientX / width) * 2 - 1;
-      targetWind = normX * 0.7;
-    }
-    
-    function handleTouchMove(e) {
-      if (e.touches.length) {
-        const touchX = e.touches[0].clientX;
-        const normX = (touchX / width) * 2 - 1;
-        targetWind = normX * 0.7;
-      }
-    }
-    
-    function smoothWindLoop() {
-      wind += (targetWind - wind) * 0.06;
-      requestAnimationFrame(smoothWindLoop);
-    }
-    
-    // No visible toast / no text on screen - just haptic feedback if supported or silent
-    // But we need to provide subtle feedback without screen text
-    function subtleFeedback() {
-      // Try to use haptic if available (silent)
-      if (window.navigator && window.navigator.vibrate) {
-        window.navigator.vibrate(30);
-      }
-      // optional: tiny console log only for dev, not visible on screen
-      // no text appears on screen
-    }
-    
-    // -------------------- INVISIBLE BUTTONS (no text on screen) --------------------
-    const moreSnowBtn = document.getElementById('moreSnowBtn');
-    const greetingBtn = document.getElementById('greetingBtn');
-    const doubleTapArea = document.getElementById('doubleTapArea');
-    
-    // More snow button (invisible) - adds snowflakes silently
-    moreSnowBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      addSnowflakes(55);
-      subtleFeedback();
-      // No text on screen, only snow increases
-    });
-    
-    // Greeting button (invisible) - only haptic + snow flutter effect, no text
-    greetingBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      subtleFeedback();
-      // create a quick snow burst for visual feedback instead of text
-      for (let i = 0; i < 18; i++) {
-        const burstX = width / 2 + (Math.random() - 0.5) * 100;
-        const burstY = height / 2 + (Math.random() - 0.5) * 80;
-        snowflakes.push({
-          x: burstX,
-          y: burstY,
-          radius: Math.random() * 5 + 1.5,
-          speedY: Math.random() * 2 + 0.8,
-          speedX: (Math.random() - 0.5) * 1.2,
-          opacity: Math.random() * 0.7 + 0.4,
-          twinkle: Math.random() * Math.PI * 2
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('snowCanvas');
+            const snowfall = new Snowfall(canvas);
+            console.log('❄️ Welcome to the Snowfall App! ❄️');
         });
-      }
-      if (snowflakes.length > 650) snowflakes = snowflakes.slice(0, 600);
-    });
-    
-    // Double tap anywhere on screen to add snow cluster
-    let lastTap = 0;
-    const container = document.querySelector('.app-container');
-    
-    function handleDoubleTap(x, y) {
-      for (let i = 0; i < 20; i++) {
-        const offsetX = x + (Math.random() - 0.5) * 100;
-        const offsetY = y + (Math.random() - 0.5) * 90;
-        let newX = Math.min(width, Math.max(0, offsetX));
-        let newY = Math.min(height, Math.max(0, offsetY));
-        snowflakes.push(createSnowflake(newX, newY));
-      }
-      subtleFeedback();
-      if (snowflakes.length > 680) snowflakes = snowflakes.slice(0, 620);
-    }
-    
-    // Mouse double click
-    container.addEventListener('dblclick', (e) => {
-      const rect = container.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
-      handleDoubleTap(clickX, clickY);
-    });
-    
-    // Touch double tap detection (mobile)
-    container.addEventListener('touchend', (e) => {
-      const now = Date.now();
-      const tapDelay = now - lastTap;
-      if (tapDelay < 300 && tapDelay > 40) {
-        e.preventDefault();
-        const touch = e.changedTouches[0];
-        const rect = container.getBoundingClientRect();
-        const touchX = touch.clientX - rect.left;
-        const touchY = touch.clientY - rect.top;
-        handleDoubleTap(touchX, touchY);
-      }
-      lastTap = now;
-    });
-    
-    // Also handle invisible area double tap (for extra)
-    if (doubleTapArea) {
-      doubleTapArea.addEventListener('dblclick', (e) => {
-        const rect = doubleTapArea.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        handleDoubleTap(x, y);
-      });
-    }
-    
-    // Optional: subtle snow drift with device orientation (adds magic)
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', (e) => {
-        if (e.gamma) {
-          const gamma = e.gamma; // -45 to 45
-          const normGamma = Math.min(0.8, Math.max(-0.8, gamma / 50));
-          targetWind = normGamma * 0.9;
-        }
-      });
-    }
-    
-    // Resize event
-    window.addEventListener('resize', () => {
-      resizeCanvas();
-    });
-    
-    // Initialize everything
-    resizeCanvas();
-    smoothWindLoop();
-    animateSnow();
-    
-    // Mouse/touch wind interaction
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchmove', handleTouchMove);
-    
-    // Performance keeper
-    setInterval(() => {
-      if (snowflakes.length > 580) {
-        snowflakes = snowflakes.slice(0, 540);
-      }
-    }, 15000);
-    
-    // ensure canvas stays crisp
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => resizeCanvas(), 50);
-    });
-    
-    // No text appears on screen — everything is pure blue background with falling snow
-    console.log('❄️ Snow Blue — Screen has no text, only snow and invisible controls');
-  })();
-</script>
+    </script>
 </body>
 </html>
