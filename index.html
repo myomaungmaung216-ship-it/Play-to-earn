@@ -11,14 +11,12 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            /* -- ပြင်ဆင်လိုက်တဲ့နေရာ (၁): နောက်ခံကို မိုးပြာရောင် Gradient လုပ်ထားတယ် -- */
-            background: linear-gradient(to bottom, #87CEEB, #1E90FF); /* Skyblue ကနေ Dodgerblue */
+            /* ညဘက် ကောင်းကင်ပြာလို မိုးပြာရောင် ပုံစံမျိုး */
+            background: linear-gradient(to bottom, #4a90e2, #144272); 
             overflow: hidden; 
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: Arial, sans-serif;
-            color: white;
         }
 
         /* နှင်းပွင့်လေးများအတွက် ပုံစံ */
@@ -32,7 +30,7 @@
             box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
         }
 
-        /* နှင်းကျမည့် Animation - အပေါ်က ကုဒ်မှာ ဒီပိတ်ကွင်းကျန်ခဲ့လို့ မရတာပါ */
+        /* နှင်းကျမည့် Animation */
         @keyframes fall {
             0% {
                 top: -10px;
@@ -50,35 +48,28 @@
 <body>
 
     <script>
-        // နှင်းပွင့်လေးတွေ အလိုအလျောက် ထွက်လာစေရန် JavaScript
         function createSnowflake() {
             const snowflake = document.createElement('div');
             snowflake.classList.add('snowflake');
             
-            // နှင်းပွင့်ရဲ့ အရွယ်အစားကို ကျပန်း (Random) ပေးခြင်း
             const size = Math.random() * 5 + 2 + 'px';
             snowflake.style.width = size;
             snowflake.style.height = size;
 
-            // နှင်းပွင့်စကျမည့် နေရာကို ဘယ်-ညာ ကျပန်း (Random) ပေးခြင်း
             snowflake.style.left = Math.random() * 100 + 'vw';
             
-            // နှင်းကျမည့် ကြာချိန် (အမြန်နှုန်း) ကို ကျပန်း (Random) ပေးခြင်း
             const duration = Math.random() * 3 + 2;
             snowflake.style.animationDuration = duration + 's'; 
             
-            // နှင်းပွင့်ရဲ့ အစလင်းအားကို ကျပန်း (Random) ပေးခြင်း
             snowflake.style.opacity = Math.random();
 
             document.body.appendChild(snowflake);
 
-            // နှင်းပွင့်လေးတွေ အောက်ရောက်ရင် ဖျက်ထုတ်ပစ်ခြင်း
             setTimeout(() => {
                 snowflake.remove();
             }, (duration + 1) * 1000);
         }
 
-        // ၅၀ မီလီစက္ကန့်တိုင်း နှင်းတစ်ပွင့် အသစ်ထုတ်ပေးရန်
         setInterval(createSnowflake, 50); 
     </script>
 </body>
