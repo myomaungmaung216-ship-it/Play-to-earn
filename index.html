@@ -5,29 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Blue Snowfall App</title>
     <style>
-        /* တစ်ခွက်လုံးကို အပြာရောင် ရင့်ရင့် နောက်ခံထားခြင်း */
+        /* တစ်ခွက်လုံးကို မိုးပြာရောင် နောက်ခံထားခြင်း */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, #050a14, #10203a);
+            /* -- ပြင်ဆင်လိုက်တဲ့နေရာ (၁): နောက်ခံကို မိုးပြာရောင် Gradient လုပ်ထားတယ် -- */
+            background: linear-gradient(to bottom, #87CEEB, #1E90FF); /* Skyblue ကနေ Dodgerblue */
             overflow: hidden; 
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: Arial, sans-serif;
             color: white;
-        }
-
-        /* App ရဲ့ အဓိက စာသား - Glow ပုံစံ */
-        h1 {
-            z-index: 10; 
-            font-size: 2.5rem;
-            text-align: center;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 
-                         0 0 25px rgba(255, 255, 255, 0.5);
-            pointer-events: none; 
         }
 
         /* နှင်းပွင့်လေးများအတွက် ပုံစံ */
@@ -57,8 +48,6 @@
     </style>
 </head>
 <body>
-
-    <h1>Welcome to My App</h1>
 
     <script>
         // နှင်းပွင့်လေးတွေ အလိုအလျောက် ထွက်လာစေရန် JavaScript
