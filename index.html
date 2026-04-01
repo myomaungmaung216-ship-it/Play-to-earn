@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Sky Blue - နှင်းနှင့် သကြားလုံး | Play ခလုတ်</title>
+  <title>Sky Blue - နှင်းနှင့် သကြားလုံး</title>
   <style>
     * {
       margin: 0;
@@ -29,7 +29,7 @@
       overflow: hidden;
     }
 
-    /* Canvases */
+    /* Canvases for snow and candies */
     #snow-canvas, #candy-canvas {
       position: absolute;
       top: 0;
@@ -41,7 +41,7 @@
     #snow-canvas { z-index: 2; }
     #candy-canvas { z-index: 3; }
 
-    /* Ambient cloud glow */
+    /* Ambient cloud glow (soft) */
     .cloud-glow {
       position: absolute;
       top: 0;
@@ -59,7 +59,7 @@
       50% { opacity: 0.7; }
     }
 
-    /* Visible Play Button - အပြာရောင် Play ခလုတ် */
+    /* Visible Play Button - Sky blue style (but vibrant blue) */
     .play-button {
       position: absolute;
       bottom: 12%;
@@ -110,7 +110,7 @@
       .button-text { font-size: 1.2rem; }
     }
 
-    /* Optional invisible area for double-tap (keep fun but not intrusive) */
+    /* Hidden double-tap area for extra fun (optional, no text) */
     .touch-area {
       position: absolute;
       bottom: 20px;
@@ -135,7 +135,7 @@
     <span class="button-text">PLAY</span>
   </button>
 
-  <!-- Hidden double-tap zone for extra fun (optional) -->
+  <!-- Hidden double-tap zone (optional, no text) -->
   <div class="touch-area" id="doubleTapArea"></div>
 </div>
 
