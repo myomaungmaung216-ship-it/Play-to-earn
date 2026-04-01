@@ -17,51 +17,49 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      font-family: system-ui, 'Segoe UI', -apple-system, 'Helvetica Neue', sans-serif;
-      background: #0a1f3e;
+      background: #031a2f;
     }
 
-    /* Main App Container - Beautiful gradient background */
+    /* Main container */
     .app-container {
       position: relative;
       width: 100%;
       height: 100%;
-      background: radial-gradient(ellipse at 30% 40%, #1a4c7a, #041c2f, #020d1a);
+      background: radial-gradient(ellipse at 30% 40%, #1e5a88, #0a2a48, #041c30);
       overflow: hidden;
     }
 
-    /* Snow Canvas */
-    #snow-canvas {
+    /* Canvases */
+    #snow-canvas, #candy-canvas {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 2;
     }
-    
-    /* Candy Canvas - separate layer for candies */
-    #candy-canvas {
+    #snow-canvas { z-index: 2; }
+    #candy-canvas { z-index: 3; }
+
+    /* Ambient glow */
+    .ambient-glow {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;
-      z-index: 3;
-    }
-    
-    /* Decorative floating elements (glitter) */
-    .glitter-sparkle {
-      position: absolute;
-      width: 100%;
-      height: 100%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,220,150,0.1) 0%, rgba(80,120,180,0.05) 100%);
       pointer-events: none;
       z-index: 1;
+      animation: breathe 6s ease-in-out infinite;
     }
-    
-    /* Invisible controls - no text on screen */
+
+    @keyframes breathe {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 0.9; }
+    }
+
+    /* Invisible buttons */
     .hidden-controls {
       position: absolute;
       bottom: 30px;
@@ -69,12 +67,11 @@
       right: 0;
       display: flex;
       justify-content: center;
-      gap: 40px;
+      gap: 50px;
       z-index: 30;
       opacity: 0;
       pointer-events: none;
     }
-    
     .invisible-btn {
       width: 70px;
       height: 70px;
@@ -85,7 +82,6 @@
       pointer-events: auto;
       -webkit-tap-highlight-color: transparent;
     }
-    
     .touch-area {
       position: absolute;
       bottom: 20px;
@@ -96,34 +92,14 @@
       opacity: 0;
       pointer-events: auto;
     }
-    
-    /* Beautiful animated gradient overlay for depth */
-    .ambient-glow {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 50% 50%, rgba(255,200,150,0.08) 0%, rgba(100,150,200,0.05) 100%);
-      pointer-events: none;
-      z-index: 1;
-      animation: slowBreath 8s ease-in-out infinite;
-    }
-    
-    @keyframes slowBreath {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.8; }
-    }
   </style>
 </head>
 <body>
-
 <div class="app-container">
   <div class="ambient-glow"></div>
   <canvas id="snow-canvas"></canvas>
   <canvas id="candy-canvas"></canvas>
   
-  <!-- Invisible buttons - screen မှာ စာလုံးဘာမှ မပါဘူး -->
   <div class="hidden-controls">
     <button class="invisible-btn" id="moreSnowBtn" aria-label="Add snow"></button>
     <button class="invisible-btn" id="candyBurstBtn" aria-label="Candy burst"></button>
@@ -133,175 +109,47 @@
 
 <script>
   (function() {
-    // ==================== SNOW SYSTEM (Reduced amount) ====================
+    // --- DOM elements ---
     const snowCanvas = document.getElementById('snow-canvas');
-    const snowCtx = snowCanvas.getContext('2d');
-    
-    // ==================== CANDY SYSTEM ====================
     const candyCanvas = document.getElementById('candy-canvas');
-    const candyCtx = candyCanvas.getContext('2d');
+    let snowCtx = snowCanvas.getContext('2d');
+    let candyCtx = candyCanvas.getContext('2d');
     
     let width = window.innerWidth;
     let height = window.innerHeight;
     
-    // Snowflakes - နှင်းတွေကို နဲနဲလျှော့ပေးထား (reduced)
+    // --- Snow system (reduced) ---
     let snowflakes = [];
-    let snowCount = 65;  // reduced from 150 to 65
+    const SNOW_COUNT = 55;   // less snow
     
-    // Candies array
+    // --- Candy system (many colorful candies) ---
     let candies = [];
-    let candyCount = 28;  // beautiful candies floating
+    let candyCount = 32;      // enough to see
     
     let wind = 0.12;
+    let targetWind = 0.12;
     
-    const MIN_SNOW_RADIUS = 2;
-    const MAX_SNOW_RADIUS = 5;
-    
-    // Candy types with beautiful colors and shapes
-    const candyColors = [
-      '#FF6B6B', '#FF8C42', '#F9C74F', '#90BE6D', '#43AA8B', 
-      '#4D908E', '#577590', '#9B5DE5', '#F15BB5', '#FEE440',
-      '#FF99C8', '#A9DEF9', '#D0F4DE', '#FFD166', '#EF476F'
-    ];
-    
-    class Candy {
-      constructor(x, y, type = null) {
-        this.x = x !== undefined ? x : Math.random() * width;
-        this.y = y !== undefined ? y : Math.random() * height;
-        this.type = type !== null ? type : Math.floor(Math.random() * 4); // 0-3 different candy shapes
-        this.size = Math.random() * 12 + 8; // 8-20px
-        this.color = candyColors[Math.floor(Math.random() * candyColors.length)];
-        this.speedY = Math.random() * 0.6 + 0.2;  // slower than snow, gentle floating
-        this.speedX = (Math.random() - 0.5) * 0.4;
-        this.rotation = Math.random() * Math.PI * 2;
-        this.rotationSpeed = (Math.random() - 0.5) * 0.02;
-        this.opacity = Math.random() * 0.6 + 0.5;
-        this.sparkle = Math.random() * Math.PI * 2;
-      }
+    // Helper: resize canvases
+    function resizeAll() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      snowCanvas.width = width;
+      snowCanvas.height = height;
+      candyCanvas.width = width;
+      candyCanvas.height = height;
       
-      update() {
-        this.y += this.speedY;
-        this.x += this.speedX + wind * 0.03;
-        this.rotation += this.rotationSpeed;
-        
-        // wrap around
-        if (this.y > height + 50) {
-          this.y = -50;
-          this.x = Math.random() * width;
-        }
-        if (this.x > width + 60) this.x = -60;
-        if (this.x < -60) this.x = width + 60;
-      }
-      
-      draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
-        ctx.globalAlpha = this.opacity;
-        
-        // Draw different candy shapes
-        if (this.type === 0) {
-          // Round candy with highlight (lollipop style)
-          ctx.beginPath();
-          ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
-          ctx.fill();
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = 'rgba(255,200,100,0.5)';
-          // highlight
-          ctx.beginPath();
-          ctx.arc(-this.size/6, -this.size/6, this.size/6, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255,255,255,0.6)';
-          ctx.fill();
-          // candy stripe
-          ctx.beginPath();
-          ctx.ellipse(0, 0, this.size/2.5, this.size/6, 0, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255,255,255,0.4)';
-          ctx.fill();
-        } 
-        else if (this.type === 1) {
-          // Heart shaped candy
-          ctx.beginPath();
-          const s = this.size / 2;
-          ctx.moveTo(0, s * 0.6);
-          ctx.bezierCurveTo(-s, -s * 0.4, -s * 0.5, -s * 0.8, 0, -s * 0.3);
-          ctx.bezierCurveTo(s * 0.5, -s * 0.8, s, -s * 0.4, 0, s * 0.6);
-          ctx.fillStyle = this.color;
-          ctx.fill();
-          ctx.shadowBlur = 6;
-          ctx.shadowColor = 'rgba(255,180,100,0.4)';
-        }
-        else if (this.type === 2) {
-          // Star candy
-          const spikes = 5;
-          const outerR = this.size / 2;
-          const innerR = this.size / 4;
-          let rot = Math.PI / 2 * 3;
-          const step = Math.PI / spikes;
-          ctx.beginPath();
-          for (let i = 0; i < spikes; i++) {
-            const x1 = Math.cos(rot) * outerR;
-            const y1 = Math.sin(rot) * outerR;
-            ctx.lineTo(x1, y1);
-            rot += step;
-            const x2 = Math.cos(rot) * innerR;
-            const y2 = Math.sin(rot) * innerR;
-            ctx.lineTo(x2, y2);
-            rot += step;
-          }
-          ctx.closePath();
-          ctx.fillStyle = this.color;
-          ctx.fill();
-          ctx.shadowBlur = 5;
-          ctx.shadowColor = 'rgba(255,200,100,0.5)';
-        }
-        else {
-          // Square candy with rounded corners
-          const r = this.size / 2;
-          ctx.beginPath();
-          ctx.roundRect(-r, -r, this.size, this.size, r * 0.3);
-          ctx.fillStyle = this.color;
-          ctx.fill();
-          // sprinkle effect
-          ctx.fillStyle = 'rgba(255,255,255,0.7)';
-          ctx.beginPath();
-          ctx.arc(-r/2, -r/2, r/5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(r/2, r/2, r/5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        
-        ctx.shadowBlur = 0;
-        ctx.restore();
-      }
+      // Reinitialize snow and candies to fit new size
+      initSnow();
+      initCandies();
     }
     
-    // Helper for rounded rect
-    if (!CanvasRenderingContext2D.prototype.roundRect) {
-      CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-        if (w < 2 * r) r = w / 2;
-        if (h < 2 * r) r = h / 2;
-        this.moveTo(x+r, y);
-        this.lineTo(x+w-r, y);
-        this.quadraticCurveTo(x+w, y, x+w, y+r);
-        this.lineTo(x+w, y+h-r);
-        this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-        this.lineTo(x+r, y+h);
-        this.quadraticCurveTo(x, y+h, x, y+h-r);
-        this.lineTo(x, y+r);
-        this.quadraticCurveTo(x, y, x+r, y);
-        return this;
-      };
-    }
-    
-    // Snowflake functions
+    // --- Snowflake ---
     function createSnowflake(x = null, y = null) {
       return {
         x: x !== null ? x : Math.random() * width,
         y: y !== null ? y : Math.random() * height,
-        radius: Math.random() * (MAX_SNOW_RADIUS - MIN_SNOW_RADIUS) + MIN_SNOW_RADIUS,
-        speedY: Math.random() * 1.2 + 0.4,
+        radius: Math.random() * 4 + 1.5,   // 1.5 - 5.5
+        speedY: Math.random() * 1.0 + 0.4,
         speedX: (Math.random() - 0.5) * 0.5,
         opacity: Math.random() * 0.5 + 0.3
       };
@@ -309,16 +157,148 @@
     
     function initSnow() {
       snowflakes = [];
-      for (let i = 0; i < snowCount; i++) {
+      for (let i = 0; i < SNOW_COUNT; i++) {
         snowflakes.push(createSnowflake());
       }
     }
     
-    function addSnowflakes(count = 15) {
-      for (let i = 0; i < count; i++) {
+    function addSnowflakes(amount = 8) {
+      for (let i = 0; i < amount; i++) {
         snowflakes.push(createSnowflake());
       }
-      if (snowflakes.length > 200) snowflakes = snowflakes.slice(0, 180);
+      if (snowflakes.length > 120) snowflakes = snowflakes.slice(0, 100);
+    }
+    
+    // --- Candies (bright, various shapes, clearly visible) ---
+    const candyColors = [
+      '#FF5252', '#FF8C42', '#FFD93D', '#6BCB77', '#4D96FF', 
+      '#9C27B0', '#FF6B9D', '#3BC9DB', '#FAA75E', '#E86A6A',
+      '#F5B042', '#42C5A5', '#D65DB1', '#FF9671', '#845EC2'
+    ];
+    
+    class Candy {
+      constructor(x = null, y = null) {
+        this.x = x !== null ? x : Math.random() * width;
+        this.y = y !== null ? y : Math.random() * height;
+        this.type = Math.floor(Math.random() * 4);   // 0:round, 1:heart, 2:star, 3:square
+        this.size = Math.random() * 14 + 10;          // 10-24px
+        this.color = candyColors[Math.floor(Math.random() * candyColors.length)];
+        this.speedY = Math.random() * 0.5 + 0.2;      // gentle float
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotSpeed = (Math.random() - 0.5) * 0.02;
+        this.opacity = Math.random() * 0.4 + 0.6;     // clearly visible
+        this.glow = Math.random() * 0.5 + 0.3;
+      }
+      
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX + wind * 0.04;
+        this.rotation += this.rotSpeed;
+        
+        // wrap around edges
+        if (this.y > height + 80) {
+          this.y = -60;
+          this.x = Math.random() * width;
+        }
+        if (this.x > width + 80) this.x = -80;
+        if (this.x < -80) this.x = width + 80;
+      }
+      
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.globalAlpha = this.opacity;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = `rgba(255, 200, 100, ${this.glow * 0.6})`;
+        
+        const half = this.size / 2;
+        
+        switch(this.type) {
+          case 0: // round candy with highlight
+            ctx.beginPath();
+            ctx.arc(0, 0, half, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            // shiny highlight
+            ctx.beginPath();
+            ctx.arc(-half * 0.3, -half * 0.3, half * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fill();
+            // stripe
+            ctx.beginPath();
+            ctx.ellipse(0, 0, half * 0.8, half * 0.2, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.fill();
+            break;
+            
+          case 1: // heart shape
+            ctx.beginPath();
+            const s = half;
+            ctx.moveTo(0, s * 0.5);
+            ctx.bezierCurveTo(-s, -s * 0.3, -s * 0.6, -s * 0.9, 0, -s * 0.2);
+            ctx.bezierCurveTo(s * 0.6, -s * 0.9, s, -s * 0.3, 0, s * 0.5);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(-s * 0.25, -s * 0.3, s * 0.25, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 240, 0.6)';
+            ctx.fill();
+            break;
+            
+          case 2: // star candy
+            const spikes = 5;
+            const outer = half;
+            const inner = half * 0.45;
+            let rot = Math.PI / 2 * 3;
+            const step = Math.PI / spikes;
+            ctx.beginPath();
+            for (let i = 0; i < spikes; i++) {
+              const x1 = Math.cos(rot) * outer;
+              const y1 = Math.sin(rot) * outer;
+              ctx.lineTo(x1, y1);
+              rot += step;
+              const x2 = Math.cos(rot) * inner;
+              const y2 = Math.sin(rot) * inner;
+              ctx.lineTo(x2, y2);
+              rot += step;
+            }
+            ctx.closePath();
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            // star core
+            ctx.beginPath();
+            ctx.arc(0, 0, half * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 250, 180, 0.8)';
+            ctx.fill();
+            break;
+            
+          default: // square with rounded corners
+            const rad = half * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(-half + rad, -half);
+            ctx.lineTo(half - rad, -half);
+            ctx.quadraticCurveTo(half, -half, half, -half + rad);
+            ctx.lineTo(half, half - rad);
+            ctx.quadraticCurveTo(half, half, half - rad, half);
+            ctx.lineTo(-half + rad, half);
+            ctx.quadraticCurveTo(-half, half, -half, half - rad);
+            ctx.lineTo(-half, -half + rad);
+            ctx.quadraticCurveTo(-half, -half, -half + rad, -half);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            // sprinkle
+            ctx.beginPath();
+            ctx.arc(-half * 0.4, -half * 0.4, half * 0.25, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 240, 200, 0.8)';
+            ctx.fill();
+            break;
+        }
+        
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
     }
     
     function initCandies() {
@@ -330,34 +310,31 @@
     
     function addCandyBurst(x, y) {
       for (let i = 0; i < 12; i++) {
-        let offX = x + (Math.random() - 0.5) * 80;
-        let offY = y + (Math.random() - 0.5) * 80;
+        let offX = x + (Math.random() - 0.5) * 100;
+        let offY = y + (Math.random() - 0.5) * 100;
         offX = Math.min(width, Math.max(0, offX));
         offY = Math.min(height, Math.max(0, offY));
         const newCandy = new Candy(offX, offY);
-        newCandy.speedY = Math.random() * 1 + 0.3;
-        newCandy.speedX = (Math.random() - 0.5) * 1.2;
+        newCandy.speedY = Math.random() * 1.2 + 0.5;
+        newCandy.speedX = (Math.random() - 0.5) * 1.0;
         candies.push(newCandy);
       }
-      if (candies.length > 120) candies = candies.slice(0, 100);
+      if (candies.length > 140) candies = candies.slice(0, 120);
     }
     
-    function addExtraCandies(count = 8) {
-      for (let i = 0; i < count; i++) {
+    function addExtraCandies(amount = 6) {
+      for (let i = 0; i < amount; i++) {
         candies.push(new Candy());
       }
-      if (candies.length > 120) candies = candies.slice(0, 100);
+      if (candies.length > 140) candies = candies.slice(0, 120);
     }
     
-    // Animation: Snow
-    let snowTime = 0;
-    function animateSnow() {
+    // --- Animation loops ---
+    function drawSnow() {
       if (!snowCtx) return;
       snowCtx.clearRect(0, 0, width, height);
-      snowTime += 0.01;
       
-      for (let i = 0; i < snowflakes.length; i++) {
-        const flake = snowflakes[i];
+      for (let flake of snowflakes) {
         flake.y += flake.speedY;
         flake.x += flake.speedX + wind * 0.05;
         
@@ -365,8 +342,8 @@
           flake.y = -20;
           flake.x = Math.random() * width;
         }
-        if (flake.x > width + 25) flake.x = -25;
-        if (flake.x < -25) flake.x = width + 25;
+        if (flake.x > width + 30) flake.x = -30;
+        if (flake.x < -30) flake.x = width + 30;
         
         snowCtx.beginPath();
         snowCtx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
@@ -375,67 +352,54 @@
         
         if (flake.radius > 3) {
           snowCtx.beginPath();
-          snowCtx.arc(flake.x, flake.y, flake.radius * 0.55, 0, Math.PI * 2);
+          snowCtx.arc(flake.x, flake.y, flake.radius * 0.6, 0, Math.PI * 2);
           snowCtx.fillStyle = `rgba(255, 255, 245, 0.7)`;
           snowCtx.fill();
         }
       }
-      requestAnimationFrame(animateSnow);
+      requestAnimationFrame(drawSnow);
     }
     
-    // Animation: Candies
-    function animateCandies() {
+    function drawCandies() {
       if (!candyCtx) return;
       candyCtx.clearRect(0, 0, width, height);
       
-      for (let i = 0; i < candies.length; i++) {
-        const candy = candies[i];
+      for (let candy of candies) {
         candy.update();
         candy.draw(candyCtx);
       }
-      requestAnimationFrame(animateCandies);
+      requestAnimationFrame(drawCandies);
     }
     
-    // Wind control
-    let targetWind = 0.12;
-    function handleMouseMove(e) {
-      const normX = (e.clientX / width) * 2 - 1;
-      targetWind = normX * 0.5;
+    // --- Wind interaction (mouse / touch) ---
+    function handleMove(clientX) {
+      const normX = (clientX / width) * 2 - 1;
+      targetWind = normX * 0.55;
     }
     
-    function handleTouchMove(e) {
+    function onMouseMove(e) {
+      handleMove(e.clientX);
+    }
+    
+    function onTouchMove(e) {
       if (e.touches.length) {
-        const touchX = e.touches[0].clientX;
-        const normX = (touchX / width) * 2 - 1;
-        targetWind = normX * 0.5;
+        handleMove(e.touches[0].clientX);
       }
     }
     
-    function smoothWindLoop() {
-      wind += (targetWind - wind) * 0.05;
-      requestAnimationFrame(smoothWindLoop);
+    function smoothWind() {
+      wind += (targetWind - wind) * 0.06;
+      requestAnimationFrame(smoothWind);
     }
     
-    // Haptic feedback
+    // --- Haptic feedback (silent) ---
     function subtleFeedback() {
       if (window.navigator && window.navigator.vibrate) {
-        window.navigator.vibrate(25);
+        window.navigator.vibrate(20);
       }
     }
     
-    // Resize
-    function resizeAll() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      snowCanvas.width = width;
-      snowCanvas.height = height;
-      candyCanvas.width = width;
-      candyCanvas.height = height;
-      initSnow();
-      initCandies();
-    }
-    
-    // Buttons and interactions
+    // --- UI Buttons (invisible, functional) ---
     const moreSnowBtn = document.getElementById('moreSnowBtn');
     const candyBurstBtn = document.getElementById('candyBurstBtn');
     const doubleTapArea = document.getElementById('doubleTapArea');
@@ -443,81 +407,89 @@
     
     moreSnowBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      addSnowflakes(12);
-      addExtraCandies(3);
+      addSnowflakes(8);
       subtleFeedback();
     });
     
     candyBurstBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const centerX = width / 2;
-      const centerY = height / 2;
-      addCandyBurst(centerX, centerY);
+      addCandyBurst(width / 2, height / 2);
       subtleFeedback();
     });
     
-    // Double tap anywhere
+    // Double tap anywhere → candy burst + a few snowflakes
     function handleDoubleTap(x, y) {
       addCandyBurst(x, y);
-      addSnowflakes(5);
+      addSnowflakes(4);
       subtleFeedback();
     }
     
     container.addEventListener('dblclick', (e) => {
       const rect = container.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
-      handleDoubleTap(clickX, clickY);
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      handleDoubleTap(x, y);
     });
     
     let lastTap = 0;
     container.addEventListener('touchend', (e) => {
       const now = Date.now();
-      const tapDelay = now - lastTap;
-      if (tapDelay < 300 && tapDelay > 40) {
+      if (now - lastTap < 300 && now - lastTap > 40) {
         e.preventDefault();
         const touch = e.changedTouches[0];
         const rect = container.getBoundingClientRect();
-        const touchX = touch.clientX - rect.left;
-        const touchY = touch.clientY - rect.top;
-        handleDoubleTap(touchX, touchY);
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        handleDoubleTap(x, y);
       }
       lastTap = now;
     });
     
-    // Device orientation for gentle wind
+    // Device orientation for wind
     if (window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientation', (e) => {
-        if (e.gamma) {
-          const gamma = Math.min(0.6, Math.max(-0.6, e.gamma / 60));
-          targetWind = gamma * 0.7;
+        if (e.gamma !== null) {
+          const gamma = Math.min(0.7, Math.max(-0.7, e.gamma / 50));
+          targetWind = gamma * 0.8;
         }
       });
     }
     
-    window.addEventListener('resize', () => resizeAll());
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchmove', handleTouchMove);
+    // --- Initialize and resize handling ---
+    window.addEventListener('resize', () => {
+      resizeAll();
+      // re-fetch contexts after resize (just in case)
+      snowCtx = snowCanvas.getContext('2d');
+      candyCtx = candyCanvas.getContext('2d');
+    });
+    
+    // Also re-fetch contexts initially
+    snowCtx = snowCanvas.getContext('2d');
+    candyCtx = candyCanvas.getContext('2d');
     
     resizeAll();
-    smoothWindLoop();
-    animateSnow();
-    animateCandies();
+    smoothWind();
+    drawSnow();
+    drawCandies();
     
-    // Add periodic candy spawn (gentle)
+    // Add event listeners for wind
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('touchmove', onTouchMove);
+    
+    // Periodically add new candies to keep scene lively (gentle)
     setInterval(() => {
       if (candies.length < 45) {
-        candies.push(new Candy());
+        addExtraCandies(3);
       }
-    }, 8000);
+    }, 9000);
     
     // Performance guard
     setInterval(() => {
-      if (snowflakes.length > 150) snowflakes = snowflakes.slice(0, 140);
-      if (candies.length > 110) candies = candies.slice(0, 95);
+      if (snowflakes.length > 100) snowflakes = snowflakes.slice(0, 90);
+      if (candies.length > 130) candies = candies.slice(0, 110);
     }, 20000);
     
-    console.log('❄️🍭 Snow Candy — Beautiful background with candies and gentle snow');
+    console.log('🍭❄️ Snow Candy: Candies and snow are dancing!');
   })();
 </script>
 </body>
